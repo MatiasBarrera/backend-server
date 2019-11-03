@@ -85,13 +85,14 @@ app.put('/:id', mdAutenticacion.verificaToken, (req, res) => {
                 usuario: usuarioGuardado
             })
         })
+
     });
 });
 
 // ======================================================
 // Crear un nuevo usuario
 // ======================================================
-app.post('/', mdAutenticacion.verificaToken, (req, res) => {
+app.post('/', (req, res) => {
     var body = req.body;
 
     var usuario = new Usuario({

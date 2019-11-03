@@ -41,64 +41,79 @@ app.post('/google', async(req, res) => {
     // para usar el await es obligatorio que sea ejecutado en uan funcion Async
     var googleUser = await verify(token)
         .catch(e => {
-            return res.status(403).json({
-                ok: false,
-                mensaje: 'Token no valido'
-            });
+            /*   return res.status(403).json({
+                  ok: false,
+                  mensaje: 'Token no valido'
+              }); */
+            return
         })
 
-    Usuario.findOne({ email: googleUser.email }, (err, usuarioBD) => {
-        if (err) {
-            return res.status(500).json({
-                ok: false,
-                mensaje: 'Error al buscar email',
-                errors: err
-            })
-        }
-
-        if (usuarioBD) {
-            if (!usuarioBD.google) {
-                return res.status(400).json({
+    if (googleUser === undefined) {
+        return res.status(403).json({
+            ok: false,
+            mensaje: 'Token undefined'
+        });
+    } else {
+        Usuario.findOne({ email: googleUser.email }, (err, usuarioBD) => {
+            if (err) {
+                return res.status(500).json({
                     ok: false,
-                    mensaje: 'Debe de usar su autenticacion normal'
-                })
-            } else {
-                var token = jwt.sign({ usuario: usuarioBD }, SEED, { expiresIn: 14400 });
-
-                res.status(200).json({
-                    ok: true,
-                    usuario: usuarioBD,
-                    token: token,
-                    id: usuarioBD.id
-
+                    mensaje: 'Error al buscar email',
+                    errors: err
                 })
             }
-        } else {
-            // Usuario no existe, se crea
-            var usuario = new Usuario();
-            usuario.nombres = googleUser.nombre;
-            usuario.email = googleUser.email;
-            usuario.img = googleUser.img;
-            usuario.google = true;
-            usuario.password = ':D';
 
-            usuario.save((err, usuarioBD) => {
-                var token = jwt.sign({ usuario: usuarioBD }, SEED, { expiresIn: 14400 });
-                res.status(200).json({
-                    ok: true,
-                    usuario: usuarioBD,
-                    token: token,
-                    id: usuarioBD.id
+            if (usuarioBD) {
+                if (!usuarioBD.google) {
+                    return res.status(400).json({
+                        ok: false,
+                        mensaje: 'Debe de usar su autenticacion normal'
+                    })
+                } else {
+                    var token = jwt.sign({ usuario: usuarioBD }, SEED, { expiresIn: 14400 });
+
+                    res.status(200).json({
+                        ok: true,
+                        usuario: usuarioBD,
+                        token: token,
+                        id: usuarioBD.id
+
+                    })
+                }
+            } else {
+                // Usuario no existe, se crea
+                var usuario = new Usuario();
+                usuario.nombres = googleUser.nombre;
+                usuario.email = googleUser.email;
+                usuario.img = googleUser.img;
+                usuario.google = true;
+                usuario.password = ':D';
+
+                usuario.save((err, usuarioBD) => {
+
+                    if (err) {
+                        return res.status(500).json({
+                            ok: false,
+                            mensaje: 'Error al guardar usuario',
+                            errors: err
+                        });
+                    }
+
+                    var token = jwt.sign({ usuario: usuarioBD }, SEED, { expiresIn: 14400 });
+                    res.status(200).json({
+                        ok: true,
+                        usuario: usuarioBD,
+                        token: token,
+                        id: usuarioBD.id
 
 
+                    })
                 })
-            })
-        }
+            }
 
 
-    })
-
-
+        })
+    }
 })
 
 
